@@ -2,6 +2,7 @@
 Ph33r No Number - OSINT Script that will use a couple OSINT resources online to look for information pertaining to a suspicous (US only) phone number.
 
 ![screenshot of ph33rnonum.sh in action](./ph33rnonum_screenshot-new.PNG)
+***Figure 0: A screenshot of ph33rNoNum.sh running in Demon Linux (http://demonlinux.com)***
 ## Usage
 Download the latest version using git and chnage the file permissions to execute it. Example:
 ```
