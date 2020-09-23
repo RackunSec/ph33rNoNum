@@ -9,6 +9,8 @@
 #  queries and is not responsible for abuse.
 #  Douglas Berdeaux weaknetlabs@gmail.com
 #
+# VERSION 0.9.22
+#
 # create /tmp/ph33rnonum.txt:
 OUTFILE=/tmp/ph33rnonum.txt
 GRN="\e[92m"
@@ -19,7 +21,7 @@ BOLD="\e[1m"
 UNDR="\e[4m"
 
 function usage {
-  printf "\n -- Usage: ${GRN}${BOLD}./ph33rNoNum.sh ${RST}${BOLD}XXX-XXX-XXXX${RST}\n\n"
+  printf "\n -- Usage: ${GRN}${BOLD}./ph33rNoNum.sh ${RST}--num ${BOLD}XXX-XXX-XXXX${RST} (--csv)\n\n"
   exit 1337 # done
 }
 export -f usage
@@ -36,22 +38,46 @@ printf " / /|  / /_/ / /|  / /_/ / / / / / /\n"
 printf "/_/ |_/\____/_/ |_/\__,_/_/ /_/ /_/ \n\n"
 printf "${RST}${BOLD}       \U260E  2020 WeakNet Labs\n\n${RST}"
 
-if [[ "$1" == "" ]]
+# Parse out arguments
+while test $# -gt 0
+do
+    case "$1" in
+        --num) NUM=$2
+            ;;
+        --csv) CSV=1
+            ;;
+    esac
+    shift
+done
+
+# Did we get a valid phone number?
+if [[ "$NUM" == "" ]]
 then
   usage
 else
-  if [[ $(echo -n $1 |egrep -E '[0-9]{3}-[0-9]{3}-[0-9]{4}'|wc -l) != "1" ]]
+  if [[ $(echo -n $NUM |egrep -E '[0-9]{3}-[0-9]{3}-[0-9]{4}'|wc -l) != "1" ]]
   then
     printf "[${RED}!${RST}] Format of ${UNDR}${RED}phone number${RST} is incorrect.\n"
     usage
     exit 1338 # done
   else
     # parse out the NPA && EXCH:
-    NPA=$(echo -n $1|sed -r 's/^([0-9]{3}).*/\1/')
-    EXCH=$(echo -n $1|sed -r 's/^[0-9]{3}-([0-9]{3}).*/\1/')
+    NPA=$(echo -n $NUM|sed -r 's/^([0-9]{3}).*/\1/')
+    EXCH=$(echo -n $NUM|sed -r 's/^[0-9]{3}-([0-9]{3}).*/\1/')
     # exit 1339 # debug
   fi
 fi
+
+# DEBUG:
+printf "${BLU}\U260E  NPA-NXX Provided as:${RST} ${NPA}-${EXCH}\n"
+if [[ $CSV -eq 1 ]]
+then
+  CSVFILE=${NUM}.csv
+  printf "${BLU}\U260E  ${GRN}A CSV file will be created as: ${CSVFILE}${RST}\n"
+  # This will blow away data in the file already for re-dos:
+  echo "phone number,npa,exchange,region,block,switch,ocn,lata,switch name,switch type,switch address,gps coordinates,map uri,building clli,carriers served,date checked" > ${CSVFILE}
+fi
+printf '====================================\n'
 # Make 1st HTTP request
 curl "https://localcallingguide.com/lca_prefix.php?npa=$NPA&nxx=$EXCH&x=&ocn=&region=&lata=&lir=&switch=&pastdays=&nextdays=" -s > $OUTFILE
 NPANXX=$(egrep 'el="NPA-NXX' $OUTFILE|head -n 1|sed -r 's/.*>([^<]+)<.*/\1/')
@@ -62,7 +88,7 @@ OSWITCH=$(egrep -E 'rs="oswitch' $OUTFILE |head -n 1|sed -r 's/.*>([^>&]+)<.*/\1
 OOCN=$(egrep -E 'rs="oocn' $OUTFILE |head -n 1|sed -r 's/.*>([^>&]+)<.*/\1/')
 OLATA=$(egrep -E 'rs="olata' $OUTFILE |head -n 1|sed -r 's/.*>([^>&]+)<.*/\1/')
 
-## OUTPUT
+## OUTPUT to terminal
 printf "${BLU}\U260E  NPA-NXX:${RST} $NPANXX\n"
 printf "${BLU}\U260E  Block:${RST} $BLOCK\n"
 printf "${BLU}\U260E  Exchange:${RST} $EXCHANGE\n"
@@ -70,6 +96,12 @@ printf "${BLU}\U260E  Region:${RST} $OREGION\n"
 printf "${BLU}\U260E  Switch:${RST} $OSWITCH\n"
 printf "${BLU}\U260E  OCN:${RST} $OOCN\n"
 printf "${BLU}\U260E  LATA:${RST} $OLATA\n"
+
+## OUTPUT to CSV file:
+if [[ $CSV -eq 1 ]]
+then
+  echo -n "$NUM,$NPA,$EXCH,$OREGION,$BLOCK,$OSWITCH,$OOCN,$OLATA" >> $CSVFILE
+fi
 
 # Make second HTTP call if the CLLI is not NULL:
 if [[ "$OSWITCH" != "" ]]
@@ -83,11 +115,17 @@ then
   ZIPADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '6p'|sed -r 's/.*>([^<]+)<.*/\1/')
   printf "${BLU}\U260E  Switch Name:${RST} $NAME\n"
   printf "${BLU}\U260E  Switch Type:${RST} $TYPE\n"
-  printf "\n${BLU}\U260E  Address:${RST}\n"
-  printf "\t$STADDR\n"
-  printf "\t$CITYADDR\n"
-  printf "\t$STATEADDR\n"
-  printf "\t$ZIPADDR\n"
+  printf '====================================\n'
+  printf "${BLU}\U260E  Address:${RST}\n"
+  printf "  $STADDR\n"
+  printf "  $CITYADDR\n"
+  printf "  $STATEADDR\n"
+  printf "  $ZIPADDR\n"
+  # OUTPUT to file:
+  if [[ $CSV -eq 1 ]]
+  then
+    echo -n ",$NAME,$TYPE,$STADDR $CITYADDR $STATEADDR $ZIPADDR" >> $CSVFILE
+  fi
 else
   printf "[!] No Switch information was discovered.\n"
 fi
@@ -101,11 +139,16 @@ BUILDINGCLLI=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Building CLLI'|sed -r 's
 # Build the Maps URI:
 LATLONG=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Lat.Long'|sed -r 's/.*td>([0-9., -]+).*/\1/'|sed -r 's/\s+//g')
 GMAPSLINK=https://www.google.com/maps/place/${LATLONG}
-CARRIER=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Served Comp'|sed -r 's/.*<a[^>]+>([^<]+)<.*<a/\1/'|sed -r 's/href.*//' $OUTFILE)
+CARRIER=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Served Comp'|sed -r 's/.*<a[^>]+>([^<]+)<.*<a/\1/'|sed -r 's/href.*//')
 # Print to the userland:
 printf "${BLU}\U260E  Building CLLI: ${RST}$BUILDINGCLLI\n"
 printf "${BLU}\U260E  Exchanges Served: ${RST}$EXCHSERVD\n"
 printf "${BLU}\U260E  GPS: ${RST}${LATLONG}\n"
 printf "${BLU}\U260E  MAP LINK: ${RST}${UNDR}${BLU}${GMAPSLINK}${RST}\n"
+# OUTPUT to file:
+if [[ $CSV -eq 1 ]]
+then
+  echo ",$LATLONG,$GMAPSLINK,$BUILDINGCLLI,$CARRIER,$(date)" >> $CSVFILE
+fi # :wq lol
 # EOS
 printf "\n"
