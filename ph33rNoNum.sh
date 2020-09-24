@@ -4,21 +4,27 @@
 #
 #   https://localcallingguide.com
 #   https://www.telcodata.us
+#   https://www.cyberbackgroundchecks.com
+#   https://zabasearch.com
 #
 # WeakNet Labs has no affiliation with the OSINT resources that this script
 #  queries and is not responsible for abuse.
 #  Douglas Berdeaux weaknetlabs@gmail.com
 #
-# VERSION 0.9.22-5
+# VERSION 0.9.23-1
 #
 # create /tmp/ph33rnonum.txt:
 OUTFILE=/tmp/ph33rnonum.txt
+# Colors for pretty text:
 GRN="\e[92m"
 RST="\e[0m"
 RED="\e[91m"
 BLU="\e[96m"
 BOLD="\e[1m"
 UNDR="\e[4m"
+PHONE="\U260E" # phone emoji
+# UA to use for all HTTP requests:
+UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0"
 
 function usage {
   printf "\n -- Usage: ${GRN}${BOLD}./ph33rNoNum.sh ${RST}--num ${BOLD}XXX-XXX-XXXX${RST} (--csv)\n\n"
@@ -29,14 +35,14 @@ export -f usage
 printf "${BLU}\n"
 printf "    ____  __   __________           \n"
 printf "   / __ \/ /_ |__  /__  /_____      \n"
-printf "  / /_/ / __ \ /_ < /_ </ ___/ ________      \n"
-printf " / ____/ / / /__/ /__/ / /    /_______/     \n"
+printf "  / /_/ / __ \ /_ < /_ </ ___/ _______      \n"
+printf " / ____/ / / /__/ /__/ / /    /______/     \n"
 printf "/_/ _ /_/_/_/____/____/_/          \n"
 printf "   / | / /___  / | / /_  ______ ___ \n"
 printf "  /  |/ / __ \/  |/ / / / / __ \`__ \\ \n"
 printf " / /|  / /_/ / /|  / /_/ / / / / / /\n"
 printf "/_/ |_/\____/_/ |_/\__,_/_/ /_/ /_/ \n\n"
-printf "${RST}${BOLD}       \U260E  2020 WeakNet Labs\n\n${RST}"
+printf "${RST}${BOLD}       ${PHONE}  2020 WeakNet Labs\n\n${RST}"
 
 # Parse out arguments
 while test $# -gt 0
@@ -69,11 +75,11 @@ else
 fi
 
 # DEBUG:
-printf " ${BLU}\U260E  NPA-NXX Provided as:${RST} ${NPA}-${EXCH}\n"
+printf " ${BLU}${PHONE}  NPA-NXX Provided as:${RST} ${NPA}-${EXCH}\n"
 if [[ $CSV -eq 1 ]]
 then
   CSVFILE=${NUM}.csv
-  printf " ${BLU}\U260E  ${GRN}A CSV file will be created as: ${CSVFILE}${RST}\n"
+  printf " ${BLU}${PHONE}  ${GRN}A CSV file will be created as: ${CSVFILE}${RST}\n"
   # This will blow away data in the file already for re-dos:
   echo "phone number,npa,exchange,region,block,switch,ocn,lata,switch name,switch type,switch address,gps coordinates,map uri,building clli,carriers served,date checked" > ${CSVFILE}
 fi
@@ -89,13 +95,13 @@ OOCN=$(egrep -E 'rs="oocn' $OUTFILE |head -n 1|sed 's/&amp;/\&/g'|sed -r 's/.*>(
 OLATA=$(egrep -E 'rs="olata' $OUTFILE |head -n 1|sed -r 's/.*>([^>&]+)<.*/\1/')
 
 ## OUTPUT to terminal
-printf " ${BLU}\U260E  NPA-NXX:${RST} $NPANXX\n"
-printf " ${BLU}\U260E  Block:${RST} $BLOCK\n"
-printf " ${BLU}\U260E  Exchange:${RST} $EXCHANGE\n"
-printf " ${BLU}\U260E  Region:${RST} $OREGION\n"
-printf " ${BLU}\U260E  Switch:${RST} $OSWITCH\n"
-printf " ${BLU}\U260E  OCN:${RST} $OOCN\n"
-printf " ${BLU}\U260E  LATA:${RST} $OLATA\n"
+printf " ${BLU}${PHONE}  NPA-NXX:${RST} $NPANXX\n"
+printf " ${BLU}${PHONE}  Block:${RST} $BLOCK\n"
+printf " ${BLU}${PHONE}  Exchange:${RST} $EXCHANGE\n"
+printf " ${BLU}${PHONE}  Region:${RST} $OREGION\n"
+printf " ${BLU}${PHONE}  Switch:${RST} $OSWITCH\n"
+printf " ${BLU}${PHONE}  OCN:${RST} $OOCN\n"
+printf " ${BLU}${PHONE}  LATA:${RST} $OLATA\n"
 
 ## OUTPUT to CSV file:
 if [[ $CSV -eq 1 ]]
@@ -113,10 +119,10 @@ then
   CITYADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '4p'|sed -r 's/.*>([^<]+)<.*/\1/')
   STATEADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '5p'|sed -r 's/.*>([^<]+)<.*/\1/')
   ZIPADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '6p'|sed -r 's/.*>([^<]+)<.*/\1/')
-  printf " ${BLU}\U260E  Switch Name:${RST} $NAME\n"
-  printf " ${BLU}\U260E  Switch Type:${RST} $TYPE\n"
+  printf " ${BLU}${PHONE}  Switch Name:${RST} $NAME\n"
+  printf " ${BLU}${PHONE}  Switch Type:${RST} $TYPE\n"
   printf '════════════════════════════════════════════════\n'
-  printf " ${BLU}\U260E  Address:${RST}\n"
+  printf " ${BLU}${PHONE}  Address:${RST}\n"
   printf "  $STADDR\n"
   printf "  $CITYADDR\n"
   printf "  $STATEADDR\n"
@@ -133,7 +139,7 @@ fi
 # Make a third HTTP call if the
 # View Switch information by CLLI:
 curl -s --cookie "PHPSESSID=3290847239847293874423" -L \
- -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0' "https://www.telcodata.us/view-switch-detail-by-clli?clli=$OSWITCH" > $OUTFILE
+ -A "${UA}" "https://www.telcodata.us/view-switch-detail-by-clli?clli=$OSWITCH" > $OUTFILE
 EXCHSERVD=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Exchanges Served'|sed -r 's/[^0-9]//g')
 BUILDINGCLLI=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Building CLLI'|sed -r 's/.*><td>([A-Z]+).*/\1/')
 # Build the Maps URI:
@@ -141,11 +147,34 @@ LATLONG=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Lat.Long'|sed -r 's/.*td>([0-
 GMAPSLINK=https://www.google.com/maps/place/${LATLONG}
 CARRIER=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Served Comp'|sed -r 's/.*<a[^>]+>([^<]+)<.*<a/\1/'|sed -r 's/href.*//')
 # Print to the userland:
-printf " ${BLU}\U260E  Carrier: ${RST}$CARRIER\n"
-printf " ${BLU}\U260E  Building CLLI: ${RST}$BUILDINGCLLI\n"
-printf " ${BLU}\U260E  Exchanges Served: ${RST}$EXCHSERVD\n"
-printf " ${BLU}\U260E  GPS: ${RST}${LATLONG}\n"
-printf " ${BLU}\U260E  MAP LINK: ${RST}${UNDR}${BLU}${GMAPSLINK}${RST}\n"
+printf " ${BLU}${PHONE}  Carrier: ${RST}$CARRIER\n"
+printf " ${BLU}${PHONE}  Building CLLI: ${RST}$BUILDINGCLLI\n"
+printf " ${BLU}${PHONE}  Exchanges Served: ${RST}$EXCHSERVD\n"
+printf " ${BLU}${PHONE}  GPS: ${RST}${LATLONG}\n"
+printf " ${BLU}${PHONE}  MAP LINK: ${RST}${UNDR}${BLU}${GMAPSLINK}${RST}\n"
+
+# Make a fourth HTTP request to cyberbackgroundchecks and parse out the result(s):
+curl -s --cookie "PHPSESSID=3290847239847293874423" -L \
+  -A "${UA}" "https://www.cyberbackgroundchecks.com/phone/${NUM}" > $OUTFILE # recycle file
+CBCHK=$(egrep -E -i '<strong.*results' $OUTFILE |sed -r 's/(^\s+|<[^>]+>)//g')
+printf " ${BLU}${PHONE}  Cyber Background Check: ${RST}${CBCHK}\n"
+
+# Make a fifth HTTP request to glean any owner/address of the phone number provided.
+PHONEDEC=$(echo ${NUM}| sed -r 's/[^0-9]+//g') # drop the hyphens essentially making this decimal.
+curl -s --cookie "PHPSESSID=3290847239847293874423" -L -A "${UA}" -s https://www.zabasearch.com/phone/${PHONEDEC} > $OUTFILE
+sed -i ':a;N;$!ba;s/\n/ /g' $OUTFILE # removes all newlines (this HTML is messy...)
+# Parse out any names (just the first one will do):
+SUBSCRIBER=$(sed -r 's/.*&firstName=([A-Za-z]+)[^&]+&lastName=([A-Za-z]+).*/\1 \2/g' $OUTFILE)
+SUBSCRIBERADDR=$(sed -r 's/.*Street Address:([^<]+).*/\1/g' $OUTFILE)
+if [[ "$SUBSCRIBER" != "" ]]
+then
+  printf " ${BLU}${PHONE}  Subscriber Name:${RST} ${SUBSCRIBER}\n"
+  if [[ "$SUBSCRIBERADDR" != "" ]]
+  then
+    printf " ${BLU}${PHONE}  Subscriber Address:${RST} ${SUBSCRIBERADDR}\n"
+  fi
+fi
+
 # OUTPUT to file:
 if [[ $CSV -eq 1 ]]
 then
