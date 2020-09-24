@@ -9,7 +9,7 @@
 #  queries and is not responsible for abuse.
 #  Douglas Berdeaux weaknetlabs@gmail.com
 #
-# VERSION 0.9.22-4
+# VERSION 0.9.22-5
 #
 # create /tmp/ph33rnonum.txt:
 OUTFILE=/tmp/ph33rnonum.txt
@@ -29,9 +29,9 @@ export -f usage
 printf "${BLU}\n"
 printf "    ____  __   __________           \n"
 printf "   / __ \/ /_ |__  /__  /_____      \n"
-printf "  / /_/ / __ \ /_ < /_ </ ___/      \n"
-printf " / ____/ / / /__/ /__/ / /          \n"
-printf "/_/ _ /_/_/_/____/____/_/           \n"
+printf "  / /_/ / __ \ /_ < /_ </ ___/ ________      \n"
+printf " / ____/ / / /__/ /__/ / /    /_______/     \n"
+printf "/_/ _ /_/_/_/____/____/_/          \n"
 printf "   / | / /___  / | / /_  ______ ___ \n"
 printf "  /  |/ / __ \/  |/ / / / / __ \`__ \\ \n"
 printf " / /|  / /_/ / /|  / /_/ / / / / / /\n"
@@ -77,7 +77,7 @@ then
   # This will blow away data in the file already for re-dos:
   echo "phone number,npa,exchange,region,block,switch,ocn,lata,switch name,switch type,switch address,gps coordinates,map uri,building clli,carriers served,date checked" > ${CSVFILE}
 fi
-printf '====================================\n'
+printf '════════════════════════════════════════════════\n'
 # Make 1st HTTP request
 curl "https://localcallingguide.com/lca_prefix.php?npa=$NPA&nxx=$EXCH&x=&ocn=&region=&lata=&lir=&switch=&pastdays=&nextdays=" -s > $OUTFILE
 NPANXX=$(egrep 'el="NPA-NXX' $OUTFILE|head -n 1|sed -r 's/.*>([^<]+)<.*/\1/')
@@ -115,7 +115,7 @@ then
   ZIPADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '6p'|sed -r 's/.*>([^<]+)<.*/\1/')
   printf " ${BLU}\U260E  Switch Name:${RST} $NAME\n"
   printf " ${BLU}\U260E  Switch Type:${RST} $TYPE\n"
-  printf '====================================\n'
+  printf '════════════════════════════════════════════════\n'
   printf " ${BLU}\U260E  Address:${RST}\n"
   printf "  $STADDR\n"
   printf "  $CITYADDR\n"
