@@ -9,7 +9,7 @@
 #  queries and is not responsible for abuse.
 #  Douglas Berdeaux weaknetlabs@gmail.com
 #
-# VERSION 0.9.22
+# VERSION 0.9.22-4
 #
 # create /tmp/ph33rnonum.txt:
 OUTFILE=/tmp/ph33rnonum.txt
@@ -69,11 +69,11 @@ else
 fi
 
 # DEBUG:
-printf "${BLU}\U260E  NPA-NXX Provided as:${RST} ${NPA}-${EXCH}\n"
+printf " ${BLU}\U260E  NPA-NXX Provided as:${RST} ${NPA}-${EXCH}\n"
 if [[ $CSV -eq 1 ]]
 then
   CSVFILE=${NUM}.csv
-  printf "${BLU}\U260E  ${GRN}A CSV file will be created as: ${CSVFILE}${RST}\n"
+  printf " ${BLU}\U260E  ${GRN}A CSV file will be created as: ${CSVFILE}${RST}\n"
   # This will blow away data in the file already for re-dos:
   echo "phone number,npa,exchange,region,block,switch,ocn,lata,switch name,switch type,switch address,gps coordinates,map uri,building clli,carriers served,date checked" > ${CSVFILE}
 fi
@@ -85,17 +85,17 @@ BLOCK=$(egrep -E '=.Block' $OUTFILE |head -n 1|sed -r 's/.*>([^>]+)<.*/\1/')
 EXCHANGE=$(egrep -E 'rs="exchange' $OUTFILE |head -n 1|sed -r 's/.*>([^>]+)<.*/\1/')
 OREGION=$(egrep -E 'rs="oregion' $OUTFILE |head -n 1|sed -r 's/.*>([^>]+)<.*/\1/')
 OSWITCH=$(egrep -E 'rs="oswitch' $OUTFILE |head -n 1|sed -r 's/.*>([^>&]+)<.*/\1/')
-OOCN=$(egrep -E 'rs="oocn' $OUTFILE |head -n 1|sed -r 's/.*>([^>&]+)<.*/\1/')
+OOCN=$(egrep -E 'rs="oocn' $OUTFILE |head -n 1|sed 's/&amp;/\&/g'|sed -r 's/.*>([^>]+)<.*/\1/')
 OLATA=$(egrep -E 'rs="olata' $OUTFILE |head -n 1|sed -r 's/.*>([^>&]+)<.*/\1/')
 
 ## OUTPUT to terminal
-printf "${BLU}\U260E  NPA-NXX:${RST} $NPANXX\n"
-printf "${BLU}\U260E  Block:${RST} $BLOCK\n"
-printf "${BLU}\U260E  Exchange:${RST} $EXCHANGE\n"
-printf "${BLU}\U260E  Region:${RST} $OREGION\n"
-printf "${BLU}\U260E  Switch:${RST} $OSWITCH\n"
-printf "${BLU}\U260E  OCN:${RST} $OOCN\n"
-printf "${BLU}\U260E  LATA:${RST} $OLATA\n"
+printf " ${BLU}\U260E  NPA-NXX:${RST} $NPANXX\n"
+printf " ${BLU}\U260E  Block:${RST} $BLOCK\n"
+printf " ${BLU}\U260E  Exchange:${RST} $EXCHANGE\n"
+printf " ${BLU}\U260E  Region:${RST} $OREGION\n"
+printf " ${BLU}\U260E  Switch:${RST} $OSWITCH\n"
+printf " ${BLU}\U260E  OCN:${RST} $OOCN\n"
+printf " ${BLU}\U260E  LATA:${RST} $OLATA\n"
 
 ## OUTPUT to CSV file:
 if [[ $CSV -eq 1 ]]
@@ -113,10 +113,10 @@ then
   CITYADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '4p'|sed -r 's/.*>([^<]+)<.*/\1/')
   STATEADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '5p'|sed -r 's/.*>([^<]+)<.*/\1/')
   ZIPADDR=$(egrep -E 'class="results"' $OUTFILE |sed -r 's/(.\/td.)/\1\\\n/g'|egrep -E '^<'|sed -n '6p'|sed -r 's/.*>([^<]+)<.*/\1/')
-  printf "${BLU}\U260E  Switch Name:${RST} $NAME\n"
-  printf "${BLU}\U260E  Switch Type:${RST} $TYPE\n"
+  printf " ${BLU}\U260E  Switch Name:${RST} $NAME\n"
+  printf " ${BLU}\U260E  Switch Type:${RST} $TYPE\n"
   printf '====================================\n'
-  printf "${BLU}\U260E  Address:${RST}\n"
+  printf " ${BLU}\U260E  Address:${RST}\n"
   printf "  $STADDR\n"
   printf "  $CITYADDR\n"
   printf "  $STATEADDR\n"
@@ -141,10 +141,11 @@ LATLONG=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Lat.Long'|sed -r 's/.*td>([0-
 GMAPSLINK=https://www.google.com/maps/place/${LATLONG}
 CARRIER=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Served Comp'|sed -r 's/.*<a[^>]+>([^<]+)<.*<a/\1/'|sed -r 's/href.*//')
 # Print to the userland:
-printf "${BLU}\U260E  Building CLLI: ${RST}$BUILDINGCLLI\n"
-printf "${BLU}\U260E  Exchanges Served: ${RST}$EXCHSERVD\n"
-printf "${BLU}\U260E  GPS: ${RST}${LATLONG}\n"
-printf "${BLU}\U260E  MAP LINK: ${RST}${UNDR}${BLU}${GMAPSLINK}${RST}\n"
+printf " ${BLU}\U260E  Carrier: ${RST}$CARRIER\n"
+printf " ${BLU}\U260E  Building CLLI: ${RST}$BUILDINGCLLI\n"
+printf " ${BLU}\U260E  Exchanges Served: ${RST}$EXCHSERVD\n"
+printf " ${BLU}\U260E  GPS: ${RST}${LATLONG}\n"
+printf " ${BLU}\U260E  MAP LINK: ${RST}${UNDR}${BLU}${GMAPSLINK}${RST}\n"
 # OUTPUT to file:
 if [[ $CSV -eq 1 ]]
 then
