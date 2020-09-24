@@ -146,6 +146,10 @@ BUILDINGCLLI=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Building CLLI'|sed -r 's
 LATLONG=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Lat.Long'|sed -r 's/.*td>([0-9., -]+).*/\1/'|sed -r 's/\s+//g')
 GMAPSLINK=https://www.google.com/maps/place/${LATLONG}
 CARRIER=$(egrep -E '^\s+<tr><th\s' $OUTFILE |grep 'Served Comp'|sed -r 's/.*<a[^>]+>([^<]+)<.*<a/\1/'|sed -r 's/href.*//')
+if [[ "$CARRIER" =~ "N/A" ]]
+then
+  CARRIER="N/A"
+fi
 # Print to the userland:
 printf " ${BLU}${PHONE}  Carrier: ${RST}$CARRIER\n"
 printf " ${BLU}${PHONE}  Building CLLI: ${RST}$BUILDINGCLLI\n"
@@ -163,16 +167,22 @@ printf " ${BLU}${PHONE}  Cyber Background Check: ${RST}${CBCHK}\n"
 PHONEDEC=$(echo ${NUM}| sed -r 's/[^0-9]+//g') # drop the hyphens essentially making this decimal.
 curl -s --cookie "PHPSESSID=3290847239847293874423" -L -A "${UA}" -s https://www.zabasearch.com/phone/${PHONEDEC} > $OUTFILE
 sed -i ':a;N;$!ba;s/\n/ /g' $OUTFILE # removes all newlines (this HTML is messy...)
-# Parse out any names (just the first one will do):
-SUBSCRIBER=$(sed -r 's/.*&firstName=([A-Za-z]+)[^&]+&lastName=([A-Za-z]+).*/\1 \2/g' $OUTFILE)
-SUBSCRIBERADDR=$(sed -r 's/.*Street Address:([^<]+).*/\1/g' $OUTFILE)
-if [[ "$SUBSCRIBER" != "" ]]
+
+if [[ "$(egrep -i '&firstName=' $OUTFILE|wc -l)" -ne 0 ]]
 then
-  printf " ${BLU}${PHONE}  Subscriber Name:${RST} ${SUBSCRIBER}\n"
-  if [[ "$SUBSCRIBERADDR" != "" ]]
+  # Parse out any names (just the first one will do):
+  SUBSCRIBER=$(sed -r 's/.*&firstName=([A-Za-z]+)[^&]+&lastName=([A-Za-z]+).*/\1 \2/g' $OUTFILE)
+  SUBSCRIBERADDR=$(sed -r 's/.*Street Address:([^<]+).*/\1/g' $OUTFILE)
+  if [[ "$SUBSCRIBER" != "" ]]
   then
-    printf " ${BLU}${PHONE}  Subscriber Address:${RST} ${SUBSCRIBERADDR}\n"
+    printf " ${BLU}${PHONE}  Subscriber Name:${RST} ${SUBSCRIBER}\n"
+    if [[ "$SUBSCRIBERADDR" != "" ]]
+    then
+      printf " ${BLU}${PHONE}  Subscriber Address:${RST} ${SUBSCRIBERADDR}\n"
+    fi
   fi
+else
+  printf "${BLU}${PHONE}  ${RST}No Subscriber information discovered in search.\n"
 fi
 
 # OUTPUT to file:
