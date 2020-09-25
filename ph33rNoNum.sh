@@ -6,12 +6,14 @@
 #   https://www.telcodata.us
 #   https://www.cyberbackgroundchecks.com
 #   https://zabasearch.com
+#   https://truepeoplesearch.com
+#
 #
 # WeakNet Labs has no affiliation with the OSINT resources that this script
 #  queries and is not responsible for abuse.
 #  Douglas Berdeaux weaknetlabs@gmail.com
 #
-# VERSION 0.9.23-1
+VERSION="0.9.24-1 (creepy meatball)"
 #
 # create /tmp/ph33rnonum.txt:
 OUTFILE=/tmp/ph33rnonum.txt
@@ -42,7 +44,8 @@ printf "   / | / /___  / | / /_  ______ ___ \n"
 printf "  /  |/ / __ \/  |/ / / / / __ \`__ \\ \n"
 printf " / /|  / /_/ / /|  / /_/ / / / / / /\n"
 printf "/_/ |_/\____/_/ |_/\__,_/_/ /_/ /_/ \n\n"
-printf "${RST}${BOLD}       ${PHONE}  2020 WeakNet Labs\n\n${RST}"
+printf "${RST}${BOLD}       ${PHONE}  2020 WeakNet Labs\n${RST}"
+printf " -- Version: ${VERSION}\n"
 
 # Parse out arguments
 while test $# -gt 0
@@ -182,8 +185,19 @@ then
     fi
   fi
 else
-  printf "${BLU}${PHONE}  ${RST}No Subscriber information discovered in search.\n"
+  printf " ${BLU}${PHONE}  ${RST}No Subscriber information discovered in search.\n"
 fi
+printf " ${BLU}${PHONE}  Additional family information:\n${RST}"
+# Make a 6th HTTP request using the phone number:
+# parse the number correctly and build the URI:
+#(412)882-4898
+PHONEPARENS=$(echo $NUM|sed -r 's/(^[0-9]{3})-/\(\1\)/g')
+URI="https://www.truepeoplesearch.com/resultphone?phoneno=$PHONEPARENS"
+curl -s --cookie "PHPSESSID=0329482039847209837443534" -A 'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0' "${URI}" > $OUTFILE
+# Parse out the results:
+egrep -E '^[A-Za-z0-9]' $OUTFILE|sed -r 's/..span>//g'|egrep -E -v '([^A-Za-z0-9 ]|Report.*|Filter)' | sed -r 's/^([0-9]+)/Age: \1\n-------------------/g' | sed -r 's/^/  /'
+
+printf "\n${BLU}${PHONE}  ${RST}Script completed.\n"
 
 # OUTPUT to file:
 if [[ $CSV -eq 1 ]]
